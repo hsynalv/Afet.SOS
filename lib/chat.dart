@@ -19,6 +19,8 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 
+import 'message_model.dart';
+
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -29,6 +31,8 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   Map<String, dynamic> jsonAsString = Map<String, dynamic>();
 
+  Map<String, dynamic> receivedDataFor = Map<String, dynamic>();
+
   final TextEditingController _controller = TextEditingController();
   final _channel = WebSocketChannel.connect(
     Uri.parse('ws://192.168.4.1/chat'),
@@ -37,6 +41,10 @@ class _ChatPageState extends State<ChatPage> {
   List<types.Message> _messages = [];
   final _user = const types.User(
     id: '82091008-a484-4a89-ae75-a22bf8d6f3ac',
+  );
+
+  final _user2 = const types.User(
+    id: '82091008-a484-4a89-ae75-a22bf8d6f3gh',
   );
 
   void initState() {
@@ -52,7 +60,7 @@ class _ChatPageState extends State<ChatPage> {
         appBar: AppBar(
           title: Text("Afet SOS"),
           centerTitle: true,
-          backgroundColor: Color.fromARGB(255, 46, 98, 141),
+          backgroundColor: Color(0xff262626),
           leading: Padding(
             padding: const EdgeInsets.only(left: 50),
             child: IconButton(
@@ -92,6 +100,20 @@ class _ChatPageState extends State<ChatPage> {
           showUserAvatars: true,
           showUserNames: true,
           user: _user,
+          avatarBuilder: (user) {
+            if (user == _user) {
+              // Kullanıcı avatarını burada oluşturun (örneğin kullanıcının profil resmi)
+              return CircleAvatar(
+                backgroundImage: AssetImage('assets/user_avatar.png'),
+              );
+            } else {
+              // Karşı taraftan gelen kullanıcının avatarını burada oluşturun
+              return CircleAvatar(
+                backgroundImage: AssetImage('assets/other_user_avatar.png'),
+                backgroundColor: Colors.white,
+              );
+            }
+          },
         ),
       );
 
@@ -191,23 +213,26 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleReceivedData(dynamic receivedData) {
-    final parsedData = jsonDecode(receivedData);
-    // Veri işlemlerini burada yapabilirsiniz
-    // Örneğin, gelen veriyi mesaj olarak ekleme
+    final parsedData = MessageModel.fromJson(jsonDecode(receivedData));
+
     final textMessage = types.TextMessage(
-      author: _user,
+      author: _user2,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
-      text: parsedData['data'],
+      text: parsedData.data?.first?.data ?? '',
     );
     _addMessage(textMessage);
+
+    // JSON verisini assets/messages.json dosyasına kaydetmek
+    final jsonData = jsonEncode(parsedData.toJson());
+    //final filePath = 'assets/messages.json';
+    //final file = File(filePath);
+    //file.writeAsString(jsonData);
   }
 
   void _loadMessages() async {
     final response = await rootBundle.loadString('assets/messages.json');
-    final messages = (jsonDecode(response) as List)
-        .map((e) => types.Message.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final messages = (jsonDecode(response));
 
     setState(() {
       _messages = messages;

@@ -33,7 +33,7 @@ class _dmPageState extends State<dmPage> {
     return Scaffold(
         appBar: AppBar(
           title: Text("Cihaz Adı"),
-          backgroundColor: Color.fromARGB(255, 46, 98, 141),
+          backgroundColor: Color(0xff262626),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
